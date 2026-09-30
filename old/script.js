@@ -755,26 +755,6 @@
   let responsiveRefreshTimer;
   addEventListener('orientationchange',()=>{clearTimeout(responsiveRefreshTimer);responsiveRefreshTimer=setTimeout(()=>window.ScrollTrigger?.refresh?.(),280)});
 
-  // ---------- ART-DIRECTED LOCATION MAP ----------
-  // Desktop keeps the embedded map interactive. On touch devices CSS routes
-  // taps on the visible map area to Google Maps so vertical page scrolling
-  // remains comfortable. Motion stays deliberately subtle.
-  const deckMapSection=qs('.deck-map');
-  if(deckMapSection && window.gsap && window.ScrollTrigger && !reduceMotion){
-    gsap.fromTo('.deck-map__map-frame',
-      {scale:1.006,yPercent:-.5},
-      {scale:1.025,yPercent:.7,ease:'none',scrollTrigger:{trigger:deckMapSection,start:'top bottom',end:'bottom top',scrub:1.1}}
-    );
-    gsap.fromTo('.deck-map__big-type',
-      {xPercent:3},
-      {xPercent:-4,ease:'none',scrollTrigger:{trigger:deckMapSection,start:'top bottom',end:'bottom top',scrub:1.25}}
-    );
-    gsap.fromTo('.deck-map__marker',
-      {y:-6},
-      {y:6,ease:'none',scrollTrigger:{trigger:deckMapSection,start:'top bottom',end:'bottom top',scrub:1.35}}
-    );
-  }
-
   // ---------- IMAGE TILT / LIGHT REACTION ----------
   if(finePointer && !reduceMotion){
     qsa('.chef-card,.journal-card').forEach(card=>{
