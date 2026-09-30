@@ -1,7 +1,8 @@
 (() => {
   const qs = (s, c=document) => c.querySelector(s);
   const qsa = (s, c=document) => [...c.querySelectorAll(s)];
-  const finePointer = matchMedia('(pointer:fine)').matches;
+  const finePointer = matchMedia('(hover:hover) and (pointer:fine)').matches;
+  const compactViewport = matchMedia('(max-width: 1023px)').matches;
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ---------- PRELOADER ----------
@@ -20,8 +21,8 @@
 
   // ---------- LENIS ----------
   let lenis = null;
-  if (window.Lenis && !reduceMotion) {
-    lenis = new Lenis({duration:1.15,smoothWheel:true,wheelMultiplier:.9,touchMultiplier:1.5});
+  if (window.Lenis && !reduceMotion && finePointer && !compactViewport) {
+    lenis = new Lenis({duration:1.15,smoothWheel:true,wheelMultiplier:.9,touchMultiplier:1.15});
     const raf = time => { lenis.raf(time); requestAnimationFrame(raf); };
     requestAnimationFrame(raf);
   }
@@ -99,7 +100,7 @@
   }
 
   // ---------- CURSOR ----------
-  if (finePointer) {
+  if (finePointer && !compactViewport) {
     const dot = qs('.cursor--dot');
     const ring = qs('.cursor--ring');
     const label = qs('.cursor--ring span');
@@ -123,7 +124,7 @@
   }
 
   // ---------- MAGNETIC ----------
-  if (finePointer && !reduceMotion) {
+  if (finePointer && !compactViewport && !reduceMotion) {
     qsa('.magnetic').forEach(el=>{
       const strength=Number(el.dataset.strength||8);
       el.addEventListener('mousemove',e=>{
@@ -139,7 +140,7 @@
   // ---------- INTERACTIVE ORBS THROUGHOUT PAGE ----------
   // Pointer motion and scroll motion use separate CSS variables so they can
   // layer together instead of fighting over the same transform.
-  if (finePointer && !reduceMotion) {
+  if (finePointer && !compactViewport && !reduceMotion) {
     qsa('[data-float-orb]').forEach(orb=>{
       const zone=orb.closest('[data-orb-zone]') || orb.parentElement;
       if(!zone) return;
@@ -180,7 +181,7 @@
   }
 
   // ---------- MOUSE PARALLAX HERO ----------
-  if (finePointer && window.gsap && !reduceMotion) {
+  if (finePointer && !compactViewport && window.gsap && !reduceMotion) {
     const layers=qsa('[data-depth]');
     qs('.hero').addEventListener('mousemove',e=>{
       const nx=(e.clientX/window.innerWidth-.5), ny=(e.clientY/window.innerHeight-.5);
@@ -191,44 +192,61 @@
     });
   }
 
-  // ---------- SCROLL ANIMATIONS ----------
+  // ---------- RESPONSIVE SCROLL ANIMATIONS ----------
   if (window.gsap && window.ScrollTrigger && !reduceMotion) {
-    qsa('.reveal-up').forEach((el,i)=>{
-      gsap.from(el,{scrollTrigger:{trigger:el,start:'top 88%'},y:46,opacity:0,duration:.9,ease:'power3.out'});
+    qsa('.reveal-up').forEach(el=>{
+      gsap.from(el,{scrollTrigger:{trigger:el,start:'top 90%',once:true},y:40,opacity:0,duration:.82,ease:'power3.out'});
     });
     qsa('.reveal-clip').forEach(el=>{
-      gsap.from(el,{scrollTrigger:{trigger:el,start:'top 88%'},clipPath:'inset(0 0 100% 0)',y:24,duration:1.15,ease:'power4.out'});
+      gsap.from(el,{scrollTrigger:{trigger:el,start:'top 90%',once:true},clipPath:'inset(0 0 100% 0)',y:18,duration:1.05,ease:'power4.out'});
     });
     qsa('.section-title.split-lines').forEach(el=>{
-      gsap.from(qsa('.line',el),{scrollTrigger:{trigger:el,start:'top 88%'},yPercent:115,duration:.95,stagger:.055,ease:'power4.out'});
+      gsap.from(qsa('.line',el),{scrollTrigger:{trigger:el,start:'top 90%',once:true},yPercent:112,duration:.88,stagger:.05,ease:'power4.out'});
     });
-    gsap.to('.hero__frame--left',{y:-130,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1}});
-    gsap.to('.hero__frame--right',{y:95,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1.2}});
-    gsap.to('.hero__frame--right-bottom',{y:-65,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1.4}});
-    gsap.to('.pattern-card--hero-a',{y:80,rotation:18,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1}});
-    gsap.to('.story__image',{y:-45,scrollTrigger:{trigger:'.story',start:'top bottom',end:'bottom top',scrub:1.2}});
-    gsap.to('.story__mini',{y:55,scrollTrigger:{trigger:'.story',start:'top bottom',end:'bottom top',scrub:1.2}});
-    gsap.to('.cinema__video',{yPercent:5,scale:1.07,scrollTrigger:{trigger:'.cinema',start:'top bottom',end:'bottom top',scrub:1.2}});
-    gsap.to('.testimonial__visual',{y:-35,scrollTrigger:{trigger:'.testimonial',start:'top bottom',end:'bottom top',scrub:1.5}});
 
-    // Edge ornaments now respond to scroll as well as the mouse, echoing the
-    // independently drifting hero layers. Each one gets a slightly different
-    // direction so the page feels composed rather than mechanically repeated.
+    const mm = gsap.matchMedia();
+    mm.add('(min-width: 1024px)',()=>{
+      gsap.to('.hero__frame--left',{y:-130,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1}});
+      gsap.to('.hero__frame--right',{y:95,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1.2}});
+      gsap.to('.hero__frame--right-bottom',{y:-65,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1.4}});
+      gsap.to('.pattern-card--hero-a',{y:80,rotation:18,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1}});
+      gsap.to('.story__image',{y:-45,scrollTrigger:{trigger:'.story',start:'top bottom',end:'bottom top',scrub:1.2}});
+      gsap.to('.story__mini',{y:55,scrollTrigger:{trigger:'.story',start:'top bottom',end:'bottom top',scrub:1.2}});
+      gsap.to('.cinema__video',{yPercent:5,scale:1.07,scrollTrigger:{trigger:'.cinema',start:'top bottom',end:'bottom top',scrub:1.2}});
+      gsap.to('.testimonial__visual',{y:-35,scrollTrigger:{trigger:'.testimonial',start:'top bottom',end:'bottom top',scrub:1.5}});
+    });
+    mm.add('(max-width: 1023px)',()=>{
+      // Mobile keeps the independently drifting Benoit feel, but movement is
+      // deliberately much smaller so content remains stable under the thumb.
+      gsap.to('.hero__frame--left',{y:-32,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:.7}});
+      gsap.to('.hero__frame--right',{y:26,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:.75}});
+      gsap.to('.hero__frame--right-bottom',{y:-22,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:.8}});
+      gsap.to('.pattern-card--hero-a',{y:24,rotation:7,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:.75}});
+      gsap.to('.pattern-card--hero-b',{y:-18,rotation:-4,scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:.8}});
+      gsap.to('.story__image',{y:-16,scrollTrigger:{trigger:'.story',start:'top bottom',end:'bottom top',scrub:.8}});
+      gsap.to('.story__mini',{y:20,scrollTrigger:{trigger:'.story',start:'top bottom',end:'bottom top',scrub:.8}});
+      gsap.to('.cinema__video',{yPercent:2,scale:1.025,scrollTrigger:{trigger:'.cinema',start:'top bottom',end:'bottom top',scrub:.75}});
+      gsap.to('.testimonial__visual',{y:-12,scrollTrigger:{trigger:'.testimonial',start:'top bottom',end:'bottom top',scrub:.85}});
+    });
+
+    // Edge ornaments remain scroll-reactive on every device. Pointer input is
+    // layered on top only when a true mouse/trackpad is available.
     qsa('[data-float-orb]').forEach((orb,i)=>{
       const zone=orb.closest('[data-orb-zone]') || orb.parentElement;
       if(!zone) return;
       const dir=i%2===0 ? 1 : -1;
-      const yStart=-10*dir, yEnd=24*dir;
-      const xEnd=6*(i%3-1);
-      const rStart=-3*dir, rEnd=7*dir;
+      const compact=window.matchMedia('(max-width:1023px)').matches;
+      const yStart=(compact?-5:-10)*dir, yEnd=(compact?14:24)*dir;
+      const xEnd=(compact?3:6)*(i%3-1);
+      const rStart=(compact?-1.5:-3)*dir, rEnd=(compact?4:7)*dir;
       gsap.fromTo(orb,
         {'--orb-sy':`${yStart}px`,'--orb-sx':'0px','--orb-sr':`${rStart}deg`},
         {'--orb-sy':`${yEnd}px`,'--orb-sx':`${xEnd}px`,'--orb-sr':`${rEnd}deg`,ease:'none',
-          scrollTrigger:{trigger:zone,start:'top bottom',end:'bottom top',scrub:1.15}}
+          scrollTrigger:{trigger:zone,start:'top bottom',end:'bottom top',scrub:compact?.75:1.15}}
       );
     });
 
-    gsap.fromTo('.deck-texture-ribbon',{backgroundPosition:'50% 40%'},{backgroundPosition:'50% 66%',ease:'none',scrollTrigger:{trigger:'.team',start:'top bottom',end:'bottom top',scrub:1.3}});
+    gsap.fromTo('.deck-texture-ribbon',{backgroundPosition:'50% 40%'},{backgroundPosition:'50% 66%',ease:'none',scrollTrigger:{trigger:'.team',start:'top bottom',end:'bottom top',scrub:compactViewport?.8:1.3}});
   }
 
   // ---------- HEADER / ACTIVE NAV / PROGRESS ----------
@@ -256,7 +274,7 @@
     if(!target)return;
     e.preventDefault();
     closeMenu();
-    if(lenis) lenis.scrollTo(target,{offset:-65,duration:1.25}); else target.scrollIntoView({behavior:'smooth'});
+    if(lenis) lenis.scrollTo(target,{offset:-65,duration:1.25}); else target.scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});
   }));
 
   // ---------- MOBILE MENU ----------
@@ -268,7 +286,7 @@
   });
 
   // ---------- MENU HOVER IMAGE ----------
-  if(finePointer){
+  if(finePointer && !compactViewport){
     const preview=qs('.menu-preview'), img=qs('img',preview);
     qsa('.dish-row').forEach(row=>{
       row.addEventListener('mouseenter',()=>{img.src=row.dataset.image;preview.classList.add('is-visible')});
@@ -375,10 +393,11 @@
 
 
 
-  // ---------- V16 FILTERABLE RESTAURANT GALLERY ----------
-  // The reference video uses a portfolio-style filter where cards smoothly
-  // reflow into their new positions. We use GSAP Flip when available and a
-  // clean fade fallback otherwise.
+  // ---------- V22 FILTERABLE MASONRY RESTAURANT GALLERY ----------
+  // CSS Grid uses shared row tracks, which creates empty holes whenever a
+  // portrait card sits beside a shorter landscape card. This small masonry
+  // engine keeps DOM order but places each visible card into the currently
+  // shortest column, preserving the real image ratios with no row gaps.
   const deckGallery=qs('.deck-gallery');
   const deckGalleryGrid=qs('[data-deck-gallery-grid]');
   if(deckGallery && deckGalleryGrid){
@@ -388,17 +407,84 @@
     const loadMore=qs('.deck-gallery__more',deckGallery);
     let activeFilter='all';
     let loadedCount=9;
+    let layoutTimer=null;
+    let filterToken=0;
+
+    deckGalleryGrid.classList.add('is-masonry');
 
     const matches=(item,filter)=>filter==='all' || (item.dataset.galleryCategory||'').split(/\s+/).includes(filter);
     const shouldShow=(item,index)=> activeFilter==='all' ? index<loadedCount : matches(item,activeFilter);
 
+    const galleryMetrics=()=>{
+      const w=window.innerWidth;
+      if(w<=479) return {cols:2,gap:7};
+      if(w<=767) return {cols:2,gap:8};
+      if(w<=980) return {cols:2,gap:10};
+      return {cols:3,gap:12};
+    };
+
+    const masonryLayout=(animate=true)=>{
+      const visible=items.filter(item=>!item.classList.contains('is-hidden'));
+      const {cols,gap}=galleryMetrics();
+      const width=deckGalleryGrid.clientWidth;
+      if(!width || !visible.length){
+        deckGalleryGrid.style.height=visible.length?'180px':'0px';
+        return;
+      }
+
+      const colWidth=(width-gap*(cols-1))/cols;
+      visible.forEach(item=>{
+        item.style.width=`${colWidth}px`;
+        item.style.position='absolute';
+      });
+
+      // Force one measurement after widths are known. Images remain in normal
+      // flow inside each card, so offsetHeight reflects their natural ratio.
+      deckGalleryGrid.getBoundingClientRect();
+      const heights=Array(cols).fill(0);
+
+      visible.forEach(item=>{
+        let col=0;
+        for(let i=1;i<cols;i++) if(heights[i]<heights[col]) col=i;
+        const x=col*(colWidth+gap);
+        const y=heights[col];
+        const h=item.offsetHeight;
+        heights[col]+=h+gap;
+
+        if(window.gsap && animate && !reduceMotion){
+          gsap.to(item,{left:x,top:y,duration:.62,ease:'power3.inOut',overwrite:'auto'});
+        }else{
+          item.style.left=`${x}px`;
+          item.style.top=`${y}px`;
+        }
+      });
+
+      const targetHeight=Math.max(0,...heights)-gap;
+      if(window.gsap && animate && !reduceMotion){
+        gsap.to(deckGalleryGrid,{height:targetHeight,duration:.62,ease:'power3.inOut',overwrite:'auto'});
+      }else{
+        deckGalleryGrid.style.height=`${targetHeight}px`;
+      }
+      if(window.ScrollTrigger) setTimeout(()=>ScrollTrigger.refresh(),animate?680:40);
+    };
+
     const positionFilterLine=(button,instant=false)=>{
       if(!button||!filterLine)return;
-      const parent=button.parentElement.getBoundingClientRect();
+      const scroller=button.parentElement;
+      const parent=scroller.getBoundingClientRect();
       const box=button.getBoundingClientRect();
-      const vars={x:box.left-parent.left,width:box.width,duration:instant?0:.42,ease:'power3.out'};
+      const x=(box.left-parent.left)+scroller.scrollLeft;
+      const vars={x,width:box.width,duration:instant?0:.42,ease:'power3.out'};
       if(window.gsap) gsap.to(filterLine,vars);
       else {filterLine.style.transform=`translateX(${vars.x}px)`;filterLine.style.width=`${vars.width}px`;}
+    };
+
+    const centerFilterButton=(button)=>{
+      if(!button) return;
+      const rail=button.parentElement;
+      if(!rail || rail.scrollWidth<=rail.clientWidth) return;
+      const left=button.offsetLeft-(rail.clientWidth-button.offsetWidth)/2;
+      rail.scrollTo({left:Math.max(0,left),behavior:reduceMotion?'auto':'smooth'});
     };
 
     const syncLoadMore=()=>{
@@ -409,27 +495,55 @@
       qs('span',loadMore).textContent=done?'All Loaded':'Load More';
     };
 
-    const applyLayout=(animate=true)=>{
-      const state=(animate && window.Flip && !reduceMotion)?Flip.getState(items):null;
-      items.forEach((item,index)=>item.classList.toggle('is-hidden',!shouldShow(item,index)));
-      if(state){
-        Flip.from(state,{
-          duration:.72,ease:'power2.inOut',absolute:true,absoluteOnLeave:true,scale:true,
-          stagger:.018,
-          onEnter:els=>gsap.fromTo(els,{opacity:0,scale:.94},{opacity:1,scale:1,duration:.48,stagger:.025,ease:'power2.out'}),
-          onLeave:els=>gsap.to(els,{opacity:0,scale:.94,duration:.28,ease:'power2.in'}),
-          onComplete:()=>window.ScrollTrigger&&ScrollTrigger.refresh()
-        });
-      }else if(window.gsap && animate && !reduceMotion){
-        gsap.fromTo(items.filter((item,index)=>shouldShow(item,index)),{opacity:0,y:18},{opacity:1,y:0,duration:.48,stagger:.035,ease:'power2.out'});
+    const finalizeGalleryState=(token,animate)=>{
+      if(token!==filterToken)return;
+      const entering=[];
+      items.forEach((item,index)=>{
+        const show=shouldShow(item,index);
+        const wasHidden=item.classList.contains('is-hidden');
+        item.classList.toggle('is-hidden',!show);
+        if(show && wasHidden) entering.push(item);
+      });
+
+      entering.forEach(item=>{
+        item.style.opacity='0';
+        item.style.transform='scale(.965)';
+      });
+      masonryLayout(animate);
+
+      if(window.gsap && animate && !reduceMotion && entering.length){
+        gsap.to(entering,{opacity:1,scale:1,duration:.46,stagger:.035,ease:'power2.out',overwrite:'auto'});
+      }else{
+        entering.forEach(item=>{item.style.opacity='1';item.style.transform='';});
       }
       syncLoadMore();
-      if(window.ScrollTrigger) setTimeout(()=>ScrollTrigger.refresh(),80);
     };
 
-    // initial progressive state, as in the reference before LOAD MORE.
-    applyLayout(false);
-    requestAnimationFrame(()=>positionFilterLine(qs('.deck-gallery__filter.is-active',deckGallery),true));
+    const applyLayout=(animate=true)=>{
+      const token=++filterToken;
+      const leaving=items.filter((item,index)=>!item.classList.contains('is-hidden') && !shouldShow(item,index));
+      if(window.gsap && animate && !reduceMotion && leaving.length){
+        gsap.to(leaving,{opacity:0,scale:.965,duration:.20,ease:'power2.in',stagger:.012,overwrite:'auto',
+          onComplete:()=>finalizeGalleryState(token,true)});
+      }else{
+        finalizeGalleryState(token,animate);
+      }
+    };
+
+    // Initial progressive state, as in the reference before LOAD MORE.
+    items.forEach((item,index)=>item.classList.toggle('is-hidden',!shouldShow(item,index)));
+    syncLoadMore();
+    requestAnimationFrame(()=>{
+      masonryLayout(false);
+      positionFilterLine(qs('.deck-gallery__filter.is-active',deckGallery),true);
+    });
+
+    // Natural image dimensions are required for exact masonry heights. Reflow
+    // as individual images become available and once again after full load.
+    qsa('img',deckGalleryGrid).forEach(img=>{
+      if(!img.complete) img.addEventListener('load',()=>masonryLayout(false),{once:true});
+    });
+    window.addEventListener('load',()=>masonryLayout(false),{once:true});
 
     filters.forEach(btn=>{
       btn.addEventListener('mouseenter',()=>positionFilterLine(btn));
@@ -438,6 +552,7 @@
       btn.addEventListener('click',()=>{
         activeFilter=btn.dataset.galleryFilter||'all';
         filters.forEach(b=>b.classList.toggle('is-active',b===btn));
+        if(window.matchMedia('(max-width:767px)').matches) centerFilterButton(btn);
         positionFilterLine(btn);
         applyLayout(true);
       });
@@ -480,7 +595,13 @@
       });
     }
 
-    addEventListener('resize',()=>positionFilterLine(qs('.deck-gallery__filter.is-active',deckGallery),true));
+    addEventListener('resize',()=>{
+      clearTimeout(layoutTimer);
+      layoutTimer=setTimeout(()=>{
+        masonryLayout(false);
+        positionFilterLine(qs('.deck-gallery__filter.is-active',deckGallery),true);
+      },90);
+    });
   }
 
 
@@ -562,6 +683,26 @@
   lightbox?.addEventListener('click',e=>{if(e.target===lightbox)closeLightbox()});
   window.addEventListener('resize',()=>{if(lightbox?.classList.contains('is-open')) renderLightbox(galleryIndex)});
 
+  // ---------- TOUCH SWIPE FOR IMAGE LIGHTBOX ----------
+  if(lightbox){
+    let touchStartX=0,touchStartY=0,touchStartTime=0;
+    lightbox.addEventListener('touchstart',e=>{
+      if(e.touches.length!==1)return;
+      touchStartX=e.touches[0].clientX;
+      touchStartY=e.touches[0].clientY;
+      touchStartTime=performance.now();
+    },{passive:true});
+    lightbox.addEventListener('touchend',e=>{
+      if(!lightbox.classList.contains('is-open') || !e.changedTouches.length)return;
+      const dx=e.changedTouches[0].clientX-touchStartX;
+      const dy=e.changedTouches[0].clientY-touchStartY;
+      const dt=performance.now()-touchStartTime;
+      if(dt<700 && Math.abs(dx)>52 && Math.abs(dx)>Math.abs(dy)*1.25){
+        renderLightbox(galleryIndex+(dx<0?1:-1));
+      }
+    },{passive:true});
+  }
+
   // ---------- COUNTERS ----------
   const counters=qsa('[data-counter]');
   const counterObserver=new IntersectionObserver(entries=>{
@@ -609,6 +750,10 @@
     if(lightbox?.classList.contains('is-open') && e.key==='ArrowLeft') renderLightbox(galleryIndex-1);
     if(lightbox?.classList.contains('is-open') && e.key==='ArrowRight') renderLightbox(galleryIndex+1);
   });
+
+  // ---------- RESPONSIVE REFRESH ----------
+  let responsiveRefreshTimer;
+  addEventListener('orientationchange',()=>{clearTimeout(responsiveRefreshTimer);responsiveRefreshTimer=setTimeout(()=>window.ScrollTrigger?.refresh?.(),280)});
 
   // ---------- IMAGE TILT / LIGHT REACTION ----------
   if(finePointer && !reduceMotion){
